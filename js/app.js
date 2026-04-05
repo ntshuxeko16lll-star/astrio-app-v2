@@ -1,110 +1,194 @@
-// js/app.js
-// Core initialization and Supabase setup
+window.Astrio = window.Astrio || {};
 
-// ----------------------
-// Supabase Configuration
-// ----------------------
-const SUPABASE_URL = "https://llooewepqlkcpqzmiuzo.supabase.co";
-const SUPABASE_KEY = "sb_publishable_vYhWHzf0GkDxch6hp9QmAA_kXkJEu6C";
+(() => {
+  const SUPABASE_URL = "https://llooewepqlkcpqzmiuzo.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_vYhWHzf0GkDxch6hp9QmAA_kXkJEu6C";
 
-// Initialize Supabase client
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ----------------------
-// Global App State
-// ----------------------
-const appState = {
-    currentUser: null,
-    feedPosts: [],
-    activeChatRoom: null,
-    notifications: [],
-};
+  Astrio.sb = sb;
+  Astrio.state = {
+    user: null,
+    profile: null,
+    page: "",
+    roomId: null
+  };
+  Astrio.channels = {};
+  Astrio.pageInits = {};
 
-// ----------------------
-// Helper Functions
-// ----------------------
+  Astrio.registerPage = (name, fn) => {
+    Astrio.pageInits[name] = fn;
+  };
 
-// Check if user is logged in
-async function checkAuth() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session && session.user) {
-        appState.currentUser = session.user;
-        console.log("User logged in:", appState.currentUser.email);
-        return true;
-    }
-    return false;
-}
+  Astrio.userName = () => {
+    return (
+      Astrio.state.profile?.username ||
+      Astrio.state.user?.user_metadata?.username ||
+      Astrio.state.user?.email?.split("@")[0] ||
+      "astrio"
+    );
+  };
 
-// Log out
-async function logout() {
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error("Logout error:", error.message);
-    else {
-        appState.currentUser = null;
-        window.location.href = "pages/auth.html";
-    }
-}
+  Astrio.avatarUrl = () => {
+    return (
+      Astrio.state.profile?.avatar_url ||
+      Astrio.state.user?.user_metadata?.avatar_url ||
+      ""
+    );
+  };
 
-// Fetch feed posts
-async function fetchFeed() {
-    const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .order("timestamp", { ascending: false })
-        .limit(50);
+  Astrio.setActiveButtons = (page) => {
+    document.querySelectorAll("[data-page]").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.page === page);
+    });
+  };
 
-    if (error) console.error("Error fetching posts:", error.message);
-    else {
-        appState.feedPosts = data;
-        console.log("Feed posts loaded:", data.length);
-    }
-}
+  Astrio.loadUser = async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    Astrio.state.user = session?.user || null;
 
-// Subscribe to real-time updates
-function subscribeRealtime() {
-    // Feed updates
-    supabase
-        .channel("public:posts")
-        .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "posts" },
-            (payload) => {
-                console.log("Realtime post update:", payload);
-                fetchFeed(); // reload feed
-            }
-        )
-        .subscribe();
-
-    // Notifications updates
-    supabase
-        .channel("public:notifications")
-        .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "notifications" },
-            (payload) => {
-                console.log("Realtime notification:", payload);
-                appState.notifications.push(payload.new);
-            }
-        )
-        .subscribe();
-}
-
-// Initialize App
-async function initApp() {
-    const loggedIn = await checkAuth();
-    if (!loggedIn) {
-        window.location.href = "pages/auth.html";
-        return;
+    if (Astrio.state.user) {
+      await Astrio.ensureProfile();
     }
 
-    // Load feed
-    await fetchFeed();
+    return Astrio.state.user;
+  };
 
-    // Subscribe to real-time changes
-    subscribeRealtime();
-}
+  Astrio.ensureProfile = async () => {
+    if (!Astrio.state.user) return null;
 
-// Call initApp on page load
-document.addEventListener("DOMContentLoaded", () => {
-    initApp();
-});
+    const user = Astrio.state.user;
+    const username = user.user_metadata?.username || user.email.split("@")[0];
+
+    const { data: existing, error } = await sb
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Profile read error:", error.message);
+    }
+
+    if (!existing) {
+      await sb.from("profiles").upsert({
+        id: user.id,
+        username,
+        bio: "",
+        avatar_url: "",
+        updated_at: new Date().toISOString()
+      });
+    }
+
+    const { data: profile } = await sb
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    Astrio.state.profile = profile || {
+      id: user.id,
+      username,
+      bio: "",
+      avatar_url: ""
+    };
+
+    return Astrio.state.profile;
+  };
+
+  Astrio.loadPage = async (page) => {
+    const allowed = [
+      "auth",
+      "feed",
+      "ai",
+      "notifications",
+      "market",
+      "create",
+      "chat",
+      "profile"
+    ];
+
+    if (!allowed.includes(page)) page = "feed";
+
+    const app = document.getElementById("app");
+    if (!app) return;
+
+    const response = await fetch(`pages/${page}.html`, { cache: "no-store" });
+    if (!response.ok) {
+      app.innerHTML = `<section class="page-screen"><div class="card">Page not found.</div></section>`;
+      return;
+    }
+
+    const html = await response.text();
+    app.innerHTML = html;
+    Astrio.state.page = page;
+    Astrio.setActiveButtons(page);
+    window.scrollTo(0, 0);
+
+    const init = Astrio.pageInits[page];
+    if (typeof init === "function") {
+      await init();
+    }
+  };
+
+  Astrio.go = (page) => {
+    location.hash = page;
+    Astrio.loadPage(page);
+  };
+
+  Astrio.logout = async () => {
+    await sb.auth.signOut();
+    Astrio.state.user = null;
+    Astrio.state.profile = null;
+    Astrio.go("auth");
+  };
+
+  Astrio.boot = async () => {
+    await Astrio.loadUser();
+
+    const hash = (location.hash || "").replace("#", "");
+    const startPage = Astrio.state.user ? (hash || "feed") : "auth";
+
+    if (!Astrio.state.user && startPage !== "auth") {
+      await Astrio.loadPage("auth");
+      return;
+    }
+
+    await Astrio.loadPage(startPage);
+  };
+
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-page]");
+    if (!button) return;
+
+    event.preventDefault();
+
+    const page = button.dataset.page;
+    if (page === "auth") {
+      Astrio.go("auth");
+      return;
+    }
+
+    if (!Astrio.state.user) {
+      Astrio.go("auth");
+      return;
+    }
+
+    Astrio.go(page);
+  });
+
+  sb.auth.onAuthStateChange(async (_event, session) => {
+    Astrio.state.user = session?.user || null;
+
+    if (Astrio.state.user) {
+      await Astrio.ensureProfile();
+      if (Astrio.state.page === "auth") {
+        Astrio.go("feed");
+      }
+    } else if (Astrio.state.page !== "auth") {
+      Astrio.go("auth");
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", Astrio.boot);
+})();
