@@ -225,3 +225,10 @@ document.querySelectorAll(".nav-btn").forEach((btn, index) => {
         window.location.href = pages[index];
     });
 });
+document.getElementById("ai-btn")?.addEventListener("click", () => {
+    window.location.href = "pages/ai.html";
+});
+
+document.getElementById("notif-btn")?.addEventListener("click", () => {
+    window.location.href = "pages/notifications.html";
+});
