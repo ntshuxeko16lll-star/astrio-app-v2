@@ -1,23 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Astrio – Notifications</title>
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/components.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="../js/notifications.js" defer></script>
-</head>
-<body class="bg-dark text-white font-sans">
-  <header class="top-nav glass">
-    <h1>Notifications</h1>
-  </header>
+<section class="page-screen">
+  <div class="page-head">
+    <h1 class="page-title">Notifications</h1>
+    <p class="page-subtitle">Likes, comments, follows, and alerts</p>
+  </div>
 
-  <main class="notifications-container">
-    <ul id="notifications-list">
-      <!-- Notifications will be loaded dynamically from Supabase Realtime -->
-    </ul>
-  </main>
-</body>
-</html>
+  <div class="row" style="justify-content:flex-end;">
+    <button id="mark-read" class="btn btn-ghost" type="button">Mark all read</button>
+  </div>
+
+  <ul id="notifications-list" class="column" style="list-style:none; padding:0; margin:0;"></ul>
+</section>
