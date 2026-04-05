@@ -1,84 +1,77 @@
-// js/notifications.js
-// Handles real-time notifications using Supabase Realtime
+window.Astrio = window.Astrio || {};
 
-// Initialize Supabase client (reuse same credentials)
-const supabaseUrl = "https://llooewepqlkcpqzmiuzo.supabase.co";
-const supabaseKey = "sb_publishable_vYhWHzf0GkDxch6hp9QmAA_kXkJEu6C";
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+Astrio.registerPage("notifications", async () => {
+  const list = document.getElementById("notifications-list");
+  const markReadBtn = document.getElementById("mark-read");
 
-// Notification container
-let notifContainer = document.getElementById("notif-btn-container");
-if (!notifContainer) {
-  notifContainer = document.createElement("div");
-  notifContainer.id = "notif-btn-container";
-  notifContainer.className = "fixed top-4 right-4 z-50";
-  document.body.appendChild(notifContainer);
-}
+  const loadNotifications = async () => {
+    if (!Astrio.state.user) return;
 
-// Local array to store notifications
-let notifications = [];
+    const { data, error } = await Astrio.sb
+      .from("notifications")
+      .select("*")
+      .eq("user_id", Astrio.state.user.id)
+      .order("created_at", { ascending: false });
 
-// ----------------------
-// Display Notifications
-// ----------------------
-function renderNotifications() {
-  notifContainer.innerHTML = ""; // Clear previous notifications
+    if (error) {
+      console.error(error);
+      list.innerHTML = `<div class="card">Could not load notifications.</div>`;
+      return;
+    }
 
-  notifications.slice(-5).reverse().forEach((notif) => {
-    const notifEl = document.createElement("div");
-    notifEl.className = "bg-gray-800 text-white px-4 py-2 rounded mb-2 shadow-lg neon-border";
-    notifEl.innerText = notif.message;
-    notifContainer.appendChild(notifEl);
-    // Auto-remove after 5s
-    setTimeout(() => {
-      notifEl.remove();
-    }, 5000);
-  });
-}
+    const items = data || [];
+    if (!items.length) {
+      list.innerHTML = `<div class="card">No notifications yet.</div>`;
+      return;
+    }
 
-// ----------------------
-// Add Notification
-// ----------------------
-function addNotification(message) {
-  notifications.push({ message, time: new Date() });
-  renderNotifications();
-}
+    list.innerHTML = items
+      .map(
+        (item) => `
+          <li class="card">
+            <div class="row" style="justify-content:space-between;align-items:flex-start;">
+              <div class="column" style="gap:4px;">
+                <strong>${item.type || "update"}</strong>
+                <span class="small-note">${item.message || item.content || ""}</span>
+              </div>
+              <span class="small-note">${new Date(item.created_at).toLocaleString()}</span>
+            </div>
+          </li>
+        `
+      )
+      .join("");
+  };
 
-// ----------------------
-// Supabase Realtime Subscription
-// ----------------------
-async function subscribeNotifications(userId) {
-  // Subscribe to 'notifications' table
-  const { data: channel, error } = supabase
-    .channel(`public:notifications_user_${userId}`)
+  if (markReadBtn) {
+    markReadBtn.addEventListener("click", async () => {
+      if (!Astrio.state.user) return;
+
+      await Astrio.sb
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", Astrio.state.user.id);
+
+      await loadNotifications();
+    });
+  }
+
+  if (Astrio.channels.notifications) {
+    Astrio.channels.notifications.unsubscribe();
+  }
+
+  Astrio.channels.notifications = Astrio.sb
+    .channel("astrio-notifications")
     .on(
       "postgres_changes",
       {
         event: "INSERT",
         schema: "public",
         table: "notifications",
-        filter: `user_id=eq.${userId}`
+        filter: Astrio.state.user ? `user_id=eq.${Astrio.state.user.id}` : undefined
       },
-      (payload) => {
-        console.log("New notification:", payload.new);
-        addNotification(payload.new.message);
-      }
+      () => loadNotifications()
     )
     .subscribe();
 
-  if (error) {
-    console.error("Error subscribing to notifications:", error);
-  }
-}
-
-// ----------------------
-// Example usage
-// ----------------------
-const currentUserId = "123"; // Replace with real logged-in user ID from auth.js
-subscribeNotifications(currentUserId);
-
-// Optional: click on notif button to see last notifications
-const notifBtn = document.getElementById("notif-btn");
-notifBtn.addEventListener("click", () => {
-  renderNotifications();
+  await loadNotifications();
 });
