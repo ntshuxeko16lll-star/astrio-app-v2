@@ -1,39 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Astrio – Login & Signup</title>
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/components.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="../js/auth.js" defer></script>
-</head>
-<body class="bg-dark text-white font-sans">
-  <div class="auth-container">
-    <div class="auth-box">
-      <img src="../assets/logo.png" alt="Astrio Logo" class="logo">
-      <h1>Welcome to Astrio</h1>
-      
-      <!-- Login Form -->
-      <form id="login-form">
-        <input type="email" id="login-email" placeholder="Email" required>
-        <input type="password" id="login-password" placeholder="Password" required>
-        <button type="submit" class="btn-primary">Log In</button>
+<section class="page-screen auth-shell">
+  <div class="card auth-card column">
+    <div class="row" style="gap:14px; align-items:center;">
+      <div class="brand-orb"></div>
+      <div class="column" style="gap:4px;">
+        <h1 class="page-title">Astrio</h1>
+        <p class="page-subtitle">Social · Creators · AI</p>
+      </div>
+    </div>
+
+    <div id="auth-message" class="status-line"></div>
+
+    <div id="login-panel" class="column">
+      <div class="page-head">
+        <h2 class="page-title" style="font-size:1.05rem;">Login</h2>
+        <p class="page-subtitle">Open your account</p>
+      </div>
+
+      <form id="login-form" class="form-grid">
+        <input id="login-email" class="input" type="email" placeholder="Email" autocomplete="email" required />
+        <input id="login-password" class="input" type="password" placeholder="Password" autocomplete="current-password" required />
+        <button class="btn btn-primary" type="submit">Continue</button>
       </form>
 
-      <hr>
+      <button id="go-signup" class="btn btn-ghost" type="button">Create account</button>
+    </div>
 
-      <!-- Signup Form -->
-      <form id="signup-form">
-        <input type="text" id="signup-name" placeholder="Full Name" required>
-        <input type="email" id="signup-email" placeholder="Email" required>
-        <input type="password" id="signup-password" placeholder="Password" required>
-        <button type="submit" class="btn-primary">Sign Up</button>
+    <div id="signup-panel" class="column hidden">
+      <div class="page-head">
+        <h2 class="page-title" style="font-size:1.05rem;">Create account</h2>
+        <p class="page-subtitle">Start posting and creating</p>
+      </div>
+
+      <form id="signup-form" class="form-grid">
+        <input id="signup-username" class="input" type="text" placeholder="Username" autocomplete="username" required />
+        <input id="signup-email" class="input" type="email" placeholder="Email" autocomplete="email" required />
+        <input id="signup-password" class="input" type="password" placeholder="Password" autocomplete="new-password" required />
+        <button class="btn btn-primary" type="submit">Create</button>
       </form>
-      
-      <p class="auth-note">By signing up, you agree to our Terms & Privacy Policy.</p>
+
+      <button id="go-login" class="btn btn-ghost" type="button">Back to login</button>
     </div>
   </div>
-</body>
-          </html>
+          </section>
