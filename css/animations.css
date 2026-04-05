@@ -1,29 +1,28 @@
-/* ==========================
-   BUTTON & ELEMENT ANIMATIONS
-========================== */
-button, .post-card, .create-btn {
-  transition: all 0.25s ease-in-out;
+/* animations.css - Feed & hover effects */
+
+.fade-in {
+    animation: fadeIn 0.8s ease forwards;
 }
 
-/* FEED SNAP */
-#app.app-container {
-  scroll-snap-type: y mandatory;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.post-card {
-  scroll-snap-align: start;
+.slide-up {
+    animation: slideUp 0.6s ease forwards;
 }
 
-/* GLOW ANIMATION */
-@keyframes neonGlow {
-  0%, 100% {
-    box-shadow: 0 0 10px #00f3ff, 0 0 20px #ff00ff;
-  }
-  50% {
-    box-shadow: 0 0 20px #00f3ff, 0 0 40px #ff00ff;
-  }
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(50px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.neon-glow {
-  animation: neonGlow 1.5s infinite alternate;
-  }
+.glow {
+    text-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--accent-color);
+}
+
+.neon-border {
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 10px var(--primary-color);
+}
