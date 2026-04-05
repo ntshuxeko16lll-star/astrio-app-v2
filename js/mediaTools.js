@@ -1,108 +1,124 @@
-// js/mediaTools.js
-// Handles AI media tools: music, video, images, captions, and hashtags
+window.Astrio = window.Astrio || {};
 
-// Supabase initialization
-const supabaseUrl = "https://llooewepqlkcpqzmiuzo.supabase.co";
-const supabaseKey = "sb_publishable_vYhWHzf0GkDxch6hp9QmAA_kXkJEu6C";
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+Astrio.registerPage("create", async () => {
+  const fileInput = document.getElementById("media-file");
+  const captionInput = document.getElementById("create-caption");
+  const typeSelect = document.getElementById("post-type");
+  const preview = document.getElementById("media-preview");
+  const postBtn = document.getElementById("create-post-btn");
+  const status = document.getElementById("create-status");
+  const filterNeon = document.getElementById("filter-neon");
+  const filterMono = document.getElementById("filter-monochrome");
+  const filterClear = document.getElementById("filter-clear");
 
-// ----------------------
-// AI Caption / Hashtag Suggestions
-// ----------------------
-async function generateCaptions(textPrompt) {
-  try {
-    // Example using a simple AI API endpoint (replace with real OpenAI or similar)
-    const response = await fetch("https://api.example.com/caption", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: textPrompt }),
-    });
-    const data = await response.json();
-    return data.captions || [];
-  } catch (error) {
-    console.error("Error generating captions:", error);
-    return [];
-  }
-}
+  let selectedFilter = "clear";
 
-// ----------------------
-// AI Music Generation (Magenta.js / Tone.js)
-// ----------------------
-async function generateMusic() {
-  try {
-    // Example using Magenta.js melody RNN
-    const model = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/melody_rnn');
-    await model.initialize();
-    const seed = { notes: [], totalTime: 1 }; // blank seed
-    const result = await model.continueSequence(seed, 32, 1.0);
-    
-    // Play using Tone.js
-    const synth = new Tone.Synth().toDestination();
-    Tone.Transport.start();
-    result.notes.forEach(note => {
-      synth.triggerAttackRelease(note.pitch, note.duration, note.startTime);
-    });
-  } catch (error) {
-    console.error("Music generation error:", error);
-  }
-}
+  const showStatus = (text, good = true) => {
+    if (!status) return;
+    status.textContent = text;
+    status.style.color = good ? "var(--cyan)" : "#ff8e8e";
+  };
 
-// ----------------------
-// AI Image / Video Generation (RunwayML / Stable Diffusion)
-// ----------------------
-async function generateMedia(prompt, type = "image") {
-  try {
-    const apiUrl = type === "image" 
-      ? "https://api.runwayml.com/v1/generate-image" 
-      : "https://api.runwayml.com/v1/generate-video";
+  const renderPreview = (file) => {
+    if (!preview || !file) return;
 
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
-    });
-    const data = await response.json();
-    return data.url; // URL to generated media
-  } catch (error) {
-    console.error("Media generation error:", error);
-    return null;
-  }
-}
+    const url = URL.createObjectURL(file);
+    preview.innerHTML = "";
 
-// ----------------------
-// Basic Video / Audio Processing (Browser)
-// ----------------------
-function processVideo(videoElement, filter = "none") {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  canvas.width = videoElement.videoWidth;
-  canvas.height = videoElement.videoHeight;
-
-  function drawFrame() {
-    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-    if (filter === "grayscale") {
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      for (let i = 0; i < imgData.data.length; i += 4) {
-        const avg = (imgData.data[i] + imgData.data[i+1] + imgData.data[i+2]) / 3;
-        imgData.data[i] = avg;
-        imgData.data[i+1] = avg;
-        imgData.data[i+2] = avg;
-      }
-      ctx.putImageData(imgData, 0, 0);
+    if (file.type.startsWith("video/")) {
+      preview.innerHTML = `<video src="${url}" controls playsinline></video>`;
+    } else if (file.type.startsWith("image/")) {
+      preview.innerHTML = `<img src="${url}" alt="preview">`;
+    } else {
+      preview.innerHTML = `<div class="card">Audio file selected: ${file.name}</div>`;
     }
-    requestAnimationFrame(drawFrame);
-  }
+  };
 
-  drawFrame();
-  return canvas;
-}
+  const applyFilterClass = () => {
+    const media = preview?.querySelector("img,video");
+    if (!media) return;
+    media.classList.remove("filter-neon", "filter-mono");
 
-// ----------------------
-// Exported Functions
-// ----------------------
-export {
-  generateCaptions,
-  generateMusic,
-  generateMedia,
-  processVideo
-};
+    if (selectedFilter === "neon") media.classList.add("filter-neon");
+    if (selectedFilter === "mono") media.classList.add("filter-mono");
+  };
+
+  fileInput?.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    if (file) {
+      renderPreview(file);
+      applyFilterClass();
+    }
+  });
+
+  filterNeon?.addEventListener("click", () => {
+    selectedFilter = "neon";
+    applyFilterClass();
+  });
+
+  filterMono?.addEventListener("click", () => {
+    selectedFilter = "mono";
+    applyFilterClass();
+  });
+
+  filterClear?.addEventListener("click", () => {
+    selectedFilter = "clear";
+    applyFilterClass();
+  });
+
+  const createPost = async () => {
+    const user = Astrio.state.user;
+    if (!user) {
+      showStatus("Login first", false);
+      Astrio.go("auth");
+      return;
+    }
+
+    const caption = captionInput?.value?.trim() || "";
+    const file = fileInput?.files?.[0] || null;
+    const postType = typeSelect?.value || (file?.type?.startsWith("video/") ? "video" : file?.type?.startsWith("image/") ? "image" : "text");
+
+    let mediaUrl = "";
+
+    if (file) {
+      const safeName = `${user.id}/${Date.now()}-${file.name}`.replace(/\s+/g, "-");
+      const { error: uploadError } = await Astrio.sb.storage
+        .from("media")
+        .upload(safeName, file, { upsert: true });
+
+      if (uploadError) {
+        showStatus(uploadError.message, false);
+        return;
+      }
+
+      const { data: publicUrl } = Astrio.sb.storage
+        .from("media")
+        .getPublicUrl(safeName);
+
+      mediaUrl = publicUrl?.publicUrl || "";
+    }
+
+    const { error } = await Astrio.sb.from("posts").insert({
+      user_id: user.id,
+      author_name: Astrio.userName(),
+      author_avatar: Astrio.avatarUrl(),
+      type: postType,
+      caption,
+      media_url: mediaUrl,
+      likes: 0
+    });
+
+    if (error) {
+      showStatus(error.message, false);
+      return;
+    }
+
+    if (captionInput) captionInput.value = "";
+    if (fileInput) fileInput.value = "";
+    if (preview) preview.innerHTML = "";
+    showStatus("Posted");
+    Astrio.go("feed");
+  };
+
+  postBtn?.addEventListener("click", createPost);
+});
