@@ -1,5 +1,19 @@
 window.Astrio = window.Astrio || {};
+const feed = document.getElementById("feed");
 
+if (feed) {
+    feed.innerHTML = `
+        <div class="post-card fade-in">
+            <h2>Welcome to Astrio</h2>
+            <p>Your app is now working.</p>
+        </div>
+
+        <div class="post-card fade-in">
+            <h2>Test Post</h2>
+            <p>This is your first feed item.</p>
+        </div>
+    `;
+}
 Astrio.registerPage("feed", async () => {
   const list = document.getElementById("feed-list");
   if (!list) return;
@@ -136,13 +150,3 @@ Astrio.registerPage("feed", async () => {
 
   await loadPosts();
 });
-const feed = document.getElementById("feed");
-
-if (feed) {
-    feed.innerHTML = `
-        <div class="post-card fade-in">
-            <h3>Welcome to Astrio 🔥</h3>
-            <p>Your app is working.</p>
-        </div>
-    `;
-}
