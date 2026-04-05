@@ -1,20 +1,21 @@
 {
   "name": "Astrio v2",
   "short_name": "Astrio",
-  "description": "Futuristic AI + Social Media App",
-  "start_url": "/index.html",
+  "description": "Astrio v2 — social, reels, AI, chat, and creators.",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0f0f0f",
+  "background_color": "#050816",
   "theme_color": "#00f3ff",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "assets/icons/logo-192.png",
+      "src": "./assets/logo.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "assets/icons/logo-512.png",
+      "src": "./assets/logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
