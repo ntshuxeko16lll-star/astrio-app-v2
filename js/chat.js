@@ -1,97 +1,115 @@
-/* ==========================
-   ASTRIO CHAT.JS
-   Handles real-time chat, emojis, and media
-========================== */
+// js/chat.js
+// Handles 1:1 and group chat using Supabase Realtime
 
-const chatPanel = document.getElementById("chat-panel");
+// Initialize Supabase (reuse credentials)
+const supabaseUrl = "https://llooewepqlkcpqzmiuzo.supabase.co";
+const supabaseKey = "sb_publishable_vYhWHzf0GkDxch6hp9QmAA_kXkJEu6C";
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+// Chat container
+const chatContainer = document.getElementById("chat-container");
+if (!chatContainer) {
+  console.error("Chat container not found!");
+}
+
+// Local messages array
+let messages = [];
+
+// ----------------------
+// Render messages
+// ----------------------
+function renderMessages() {
+  if (!chatContainer) return;
+  chatContainer.innerHTML = ""; // Clear previous
+
+  messages.forEach((msg) => {
+    const msgEl = document.createElement("div");
+    msgEl.className = `px-4 py-2 mb-2 rounded ${
+      msg.sender_id === currentUserId
+        ? "bg-cyan-500 text-black ml-auto w-max"
+        : "bg-gray-800 text-white w-max"
+    }`;
+    msgEl.innerText = msg.content;
+    chatContainer.appendChild(msgEl);
+  });
+
+  // Scroll to bottom
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// ----------------------
+// Add message locally & send to Supabase
+// ----------------------
+async function sendMessage(content, chatRoomId) {
+  if (!content) return;
+
+  const { data, error } = await supabase.from("messages").insert([
+    {
+      chat_room_id: chatRoomId,
+      sender_id: currentUserId,
+      content: content,
+      created_at: new Date(),
+    },
+  ]);
+
+  if (error) console.error("Error sending message:", error);
+  else {
+    console.log("Message sent:", data);
+  }
+}
+
+// ----------------------
+// Subscribe to messages
+// ----------------------
+async function subscribeChat(chatRoomId) {
+  const { data: channel, error } = supabase
+    .channel(`public:messages_chat_${chatRoomId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `chat_room_id=eq.${chatRoomId}`,
+      },
+      (payload) => {
+        console.log("New chat message:", payload.new);
+        messages.push(payload.new);
+        renderMessages();
+      }
+    )
+    .subscribe();
+
+  if (error) console.error("Error subscribing to chat:", error);
+}
+
+// ----------------------
+// Example usage
+// ----------------------
+const currentUserId = "123"; // Replace with real logged-in user ID
+const currentChatRoomId = "1"; // Replace with selected chat room ID
+
+subscribeChat(currentChatRoomId);
+
+// Example: sending a message via input
 const chatInput = document.getElementById("chat-input");
 const chatSendBtn = document.getElementById("chat-send-btn");
 
-// 1️⃣ Initialize chat
-async function initChat() {
-  if (!chatPanel) return;
-
-  const user = supabase.auth.user();
-  if (!user) return;
-
-  chatPanel.innerHTML = "<p class='neon-text'>Loading messages...</p>";
-
-  // Load existing messages
-  const { data: messages, error } = await supabase
-    .from("messages")
-    .select("*")
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    console.error("Error loading messages:", error);
-    chatPanel.innerHTML = "<p class='neon-text'>Failed to load messages</p>";
-    return;
-  }
-
-  renderMessages(messages);
-
-  // Subscribe to new messages in real-time
-  supabase
-    .channel("public:messages")
-    .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, payload => {
-      renderMessages([payload.new], true);
-    })
-    .subscribe();
-}
-
-// 2️⃣ Render messages
-function renderMessages(messages, append = false) {
-  if (!chatPanel) return;
-
-  messages.forEach(msg => {
-    const msgDiv = document.createElement("div");
-    msgDiv.className = msg.user_id === supabase.auth.user()?.id ? "message-outgoing neon-glow" : "message-incoming neon-glow";
-
-    msgDiv.innerHTML = `
-      <span class="message-user">${msg.user_name || "Anon"}</span>
-      <span class="message-text">${msg.text}</span>
-      <span class="message-time">${new Date(msg.created_at).toLocaleTimeString()}</span>
-    `;
-
-    if (append) chatPanel.appendChild(msgDiv);
-    else chatPanel.prepend(msgDiv);
+if (chatSendBtn && chatInput) {
+  chatSendBtn.addEventListener("click", () => {
+    sendMessage(chatInput.value, currentChatRoomId);
+    chatInput.value = "";
   });
 
-  chatPanel.scrollTop = chatPanel.scrollHeight;
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      sendMessage(chatInput.value, currentChatRoomId);
+      chatInput.value = "";
+    }
+  });
 }
 
-// 3️⃣ Send message
-async function sendMessage() {
-  const text = chatInput.value.trim();
-  if (!text) return;
-
-  const user = supabase.auth.user();
-  const userName = user?.email.split("@")[0] || "Anon";
-
-  const { error } = await supabase
-    .from("messages")
-    .insert([
-      {
-        user_id: user.id,
-        user_name: userName,
-        text
-      }
-    ]);
-
-  if (error) console.error("Error sending message:", error);
-  chatInput.value = "";
-}
-
-// 4️⃣ Event listeners
-if (chatSendBtn) chatSendBtn.addEventListener("click", sendMessage);
-if (chatInput) chatInput.addEventListener("keypress", e => {
-  if (e.key === "Enter") sendMessage();
-});
-
-// 5️⃣ Emoji support (using Twemoji/EmojiMart placeholders)
-function addEmoji(emoji) {
-  chatInput.value += emoji;
-}
-
-// Initialize on DOM load
-document.addEventListener("DOMContentLoaded", initChat);
+// ----------------------
+// Future: WebRTC voice/video calls
+// ----------------------
+// We can integrate WebRTC for live calls here in a later step
