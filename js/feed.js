@@ -1,103 +1,91 @@
-/* ==========================
-   ASTRIO FEED.JS
-   Handles vertical scrolling feed, Reels, likes/comments, AI content
-========================== */
+// js/feed.js
+// Handles fetching, displaying, and updating posts in the feed
 
-async function initFeed() {
-  const feedContainer = document.getElementById("feed-container");
-  if (!feedContainer) return;
+// Reference to feed container
+const feedContainer = document.getElementById("feed");
 
-  feedContainer.innerHTML = "<p class='neon-text'>Loading feed...</p>";
+// Initialize Supabase client (reuse from app.js)
+const supabaseUrl = "https://llooewepqlkcpqzmiuzo.supabase.co";
+const supabaseKey = "sb_publishable_vYhWHzf0GkDxch6hp9QmAA_kXkJEu6C";
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-  // 1️⃣ Fetch initial posts from Supabase
-  const { data: posts, error } = await supabase
-    .from("posts")
-    .select("*")
-    .order("created_at", { ascending: false });
+// ----------------------
+// Fetch Posts
+// ----------------------
+async function fetchPosts() {
+    try {
+        const { data, error } = await supabase
+            .from("posts")
+            .select("*")
+            .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching posts:", error);
-    feedContainer.innerHTML = "<p class='neon-text'>Failed to load feed</p>";
-    return;
-  }
+        if (error) {
+            console.error("Error fetching posts:", error.message);
+            return;
+        }
 
-  // 2️⃣ Render posts
-  posts.forEach(post => {
-    const postCard = document.createElement("div");
-    postCard.className = "post-card neon-glow";
+        renderPosts(data);
+    } catch (err) {
+        console.error("Unexpected error fetching posts:", err);
+    }
+}
 
-    postCard.innerHTML = `
-      <div class="post-header">
-        <span class="username">${post.user}</span>
-        <span class="time">${new Date(post.created_at).toLocaleString()}</span>
-      </div>
-      <div class="post-media">
-        ${post.type === "video" ? `<video src="${post.url}" controls></video>` : `<img src="${post.url}" alt="post"/>`}
-      </div>
-      <div class="post-caption">
-        <p>${post.caption}</p>
-      </div>
-      <div class="post-actions">
-        <button onclick="likePost('${post.id}')">❤️ ${post.likes || 0}</button>
-        <button onclick="commentPost('${post.id}')">💬</button>
-        <button onclick="sharePost('${post.id}')">🔗</button>
-      </div>
-    `;
-    feedContainer.appendChild(postCard);
-  });
+// ----------------------
+// Render Posts
+// ----------------------
+function renderPosts(posts) {
+    if (!feedContainer) return;
 
-  // 3️⃣ Listen for new posts in realtime
-  supabase
-    .channel("public:posts")
-    .on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: "posts" },
-      payload => {
-        const post = payload.new;
-        const postCard = document.createElement("div");
-        postCard.className = "post-card neon-glow";
+    feedContainer.innerHTML = ""; // Clear feed
 
-        postCard.innerHTML = `
-          <div class="post-header">
-            <span class="username">${post.user}</span>
-            <span class="time">${new Date(post.created_at).toLocaleString()}</span>
-          </div>
-          <div class="post-media">
-            ${post.type === "video" ? `<video src="${post.url}" controls></video>` : `<img src="${post.url}" alt="post"/>`}
-          </div>
-          <div class="post-caption">
-            <p>${post.caption}</p>
-          </div>
-          <div class="post-actions">
-            <button onclick="likePost('${post.id}')">❤️ ${post.likes || 0}</button>
-            <button onclick="commentPost('${post.id}')">💬</button>
-            <button onclick="sharePost('${post.id}')">🔗</button>
-          </div>
+    posts.forEach((post) => {
+        const postEl = document.createElement("div");
+        postEl.className = "post-card fade-in";
+
+        let mediaContent = "";
+        if (post.type === "video") {
+            mediaContent = `<video src="${post.media_url}" controls></video>`;
+        } else if (post.type === "image") {
+            mediaContent = `<img src="${post.media_url}" alt="Post Image">`;
+        }
+
+        postEl.innerHTML = `
+            <div class="post-header flex justify-between items-center mb-2">
+                <div class="post-user font-bold neon-text">${post.username}</div>
+                <div class="post-time text-sm text-gray-400">${new Date(post.created_at).toLocaleString()}</div>
+            </div>
+            <div class="post-caption mb-2">${post.caption || ""}</div>
+            <div class="post-media">${mediaContent}</div>
         `;
-        feedContainer.prepend(postCard);
-      }
-    )
-    .subscribe();
-}
 
-// 4️⃣ Post Actions
-async function likePost(postId) {
-  const { data, error } = await supabase.rpc("like_post", { pid: postId });
-  if (error) console.error("Like error:", error);
-}
-
-function commentPost(postId) {
-  const comment = prompt("Add a comment:");
-  if (!comment) return;
-
-  supabase
-    .from("comments")
-    .insert([{ post_id: postId, comment, user: supabase.auth.user()?.email }])
-    .then(({ error }) => {
-      if (error) console.error("Comment error:", error);
+        feedContainer.appendChild(postEl);
     });
 }
 
-function sharePost(postId) {
-  alert(`Post ${postId} shared!`);
-                  }
+// ----------------------
+// Real-time Updates
+// ----------------------
+function subscribeToFeed() {
+    supabase
+        .channel("public:posts")
+        .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "posts" },
+            (payload) => {
+                console.log("Realtime change:", payload);
+                fetchPosts(); // Re-fetch posts on any change
+            }
+        )
+        .subscribe();
+}
+
+// ----------------------
+// Initialize Feed
+// ----------------------
+async function initFeed() {
+    await fetchPosts();
+    subscribeToFeed();
+}
+
+// Run feed initialization
+initFeed();          
