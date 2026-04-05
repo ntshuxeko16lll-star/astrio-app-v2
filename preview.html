@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astrio App Preview</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(120deg, rgba(255, 249, 249, 0.1), rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(10px);
+            margin: 0;
+            padding: 0;
+            color: white;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .screen {
+            width: 90%;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+        .screen:hover {
+            transform: scale(1.05);
+        }
+        .neon {
+            color: #39ff14;
+            text-shadow:
+                0 0 5px #39ff14,
+                0 0 10px #39ff14,
+                0 0 20px #39ff14;
+        }
+        h1 {
+            margin: 0;
+        }
+        .footer {
+            position: fixed;
+            bottom: 20px;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="screen"><h1 class="neon">Home Feed</h1></div>
+        <div class="screen"><h1 class="neon">AI Tools</h1></div>
+        <div class="screen"><h1 class="neon">Profile</h1></div>
+        <div class="screen"><h1 class="neon">Chat</h1></div>
+        <div class="screen"><h1 class="neon">Market</h1></div>
+        <div class="screen"><h1 class="neon">Create</h1></div>
+        <div class="screen"><h1 class="neon">Notifications</h1></div>
+    </div>
+    <div class="footer">Astrio App Preview - 2026-04-05 22:21:21 UTC</div>
+</body>
+</html>
