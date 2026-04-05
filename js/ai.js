@@ -1,100 +1,97 @@
-// js/ai.js
-// Handles AI-powered suggestions, caption/hashtag recommendations, and media generation
+window.Astrio = window.Astrio || {};
 
-// Initialize Supabase client (reuse from app.js)
-const supabaseUrl = "https://llooewepqlkcpqzmiuzo.supabase.co";
-const supabaseKey = "sb_publishable_vYhWHzf0GkDxch6hp9QmAA_kXkJEu6C";
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+Astrio.registerPage("ai", async () => {
+  const promptInput = document.getElementById("ai-prompt");
+  const captionBtn = document.getElementById("ai-caption-btn");
+  const hashtagBtn = document.getElementById("ai-hashtag-btn");
+  const ideaBtn = document.getElementById("ai-idea-btn");
+  const output = document.getElementById("ai-output");
 
-// ----------------------
-// Elements
-// ----------------------
-const aiBtn = document.getElementById("ai-btn");
-const aiOverlay = document.createElement("div");
-aiOverlay.className = "ai-overlay fixed top-0 left-0 w-full h-full bg-black/80 backdrop-blur-md hidden z-50 p-4 overflow-y-auto";
-document.body.appendChild(aiOverlay);
+  const captions = [
+    "Neon nights and future lights.",
+    "Built in the glow of tomorrow.",
+    "Short reels, big energy.",
+    "A new world in motion."
+  ];
 
-// Close button
-const closeBtn = document.createElement("button");
-closeBtn.innerText = "Close AI";
-closeBtn.className = "bg-primary-color text-black px-4 py-2 rounded mb-4";
-aiOverlay.appendChild(closeBtn);
+  const hashtags = [
+    "#Astrio",
+    "#NeonFeed",
+    "#CreatorMode",
+    "#FutureSocial",
+    "#Reels"
+  ];
 
-closeBtn.addEventListener("click", () => {
-  aiOverlay.classList.add("hidden");
-});
+  const ideas = [
+    "Make a 12-second reel with a hard beat drop and a glowing city backdrop.",
+    "Turn a simple selfie video into a cinematic cyber clip with motion zooms.",
+    "Create an anime-style intro clip with a futuristic title reveal.",
+    "Cut a music snippet into a looping visual post with pulsing effects."
+  ];
 
-// ----------------------
-// AI Button click
-// ----------------------
-aiBtn.addEventListener("click", () => {
-  aiOverlay.classList.remove("hidden");
-  loadAISuggestions();
-});
+  const render = (title, items) => {
+    if (!output) return;
 
-// ----------------------
-// Load AI Suggestions
-// ----------------------
-async function loadAISuggestions() {
-  aiOverlay.innerHTML = "<p class='text-white'>Generating AI suggestions...</p>";
-
-  try {
-    // Example: Caption & hashtag suggestions (can integrate OpenAI / local model later)
-    const captions = [
-      "Feeling cosmic today!",
-      "Exploring neon dreams 🌌",
-      "AI + creativity = endless possibilities",
-      "Cyberpunk vibes in motion"
-    ];
-
-    const hashtags = ["#AstrioV2", "#AI", "#NeonFeed", "#FutureSocial"];
-
-    aiOverlay.innerHTML = `
-      <h2 class="text-2xl neon-text mb-4">AI Suggestions</h2>
-      <div class="mb-4">
-        <h3 class="text-lg mb-2">Captions</h3>
-        ${captions.map(c => `<button class="ai-suggestion bg-gray-800 hover:bg-gray-700 px-3 py-1 rounded m-1">${c}</button>`).join("")}
-      </div>
-      <div class="mb-4">
-        <h3 class="text-lg mb-2">Hashtags</h3>
-        ${hashtags.map(h => `<button class="ai-suggestion bg-gray-800 hover:bg-gray-700 px-3 py-1 rounded m-1">${h}</button>`).join("")}
-      </div>
-      <div>
-        <h3 class="text-lg mb-2">AI Media Generation</h3>
-        <p class="text-gray-300">Click below to generate AI images or videos (placeholder)</p>
-        <button id="generate-ai-media" class="bg-primary-color px-4 py-2 rounded mt-2">Generate AI Media</button>
+    output.innerHTML = `
+      <div class="card column">
+        <div class="page-title">${title}</div>
+        <div class="grid">
+          ${items
+            .map(
+              (item) => `
+                <button class="btn btn-ghost ai-copy" data-copy="${item}">${item}</button>
+              `
+            )
+            .join("")}
+        </div>
       </div>
     `;
+  };
 
-    // Event listener for AI media generation
-    document.getElementById("generate-ai-media").addEventListener("click", async () => {
-      aiOverlay.innerHTML += "<p class='text-white mt-2'>Generating AI media... (this is a placeholder)</p>";
-      // Integrate RunwayML / Stable Diffusion API here
-    });
-
-    // Click to copy caption/hashtag
-    document.querySelectorAll(".ai-suggestion").forEach(btn => {
-      btn.addEventListener("click", () => {
-        navigator.clipboard.writeText(btn.innerText);
-        btn.innerText = "Copied!";
-        setTimeout(() => btn.innerText = btn.innerText, 1000);
+  const copyHandlers = () => {
+    document.querySelectorAll(".ai-copy").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const text = btn.dataset.copy || "";
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = "Copied";
+          setTimeout(() => {
+            btn.textContent = text;
+          }, 900);
+        } catch {
+          alert(text);
+        }
       });
     });
+  };
 
-  } catch (err) {
-    aiOverlay.innerHTML = `<p class="text-red-500">Error generating AI suggestions: ${err.message}</p>`;
+  captionBtn?.addEventListener("click", () => {
+    const base = promptInput?.value?.trim() || "";
+    const items = captions.map((c) => (base ? `${c} ${base}` : c));
+    render("Captions", items);
+    copyHandlers();
+  });
+
+  hashtagBtn?.addEventListener("click", () => {
+    const base = promptInput?.value?.trim() || "";
+    const items = base
+      ? hashtags.map((tag) => `${tag} ${base.split(" ").slice(0, 2).join(" ")}`.trim())
+      : hashtags;
+    render("Hashtags", items);
+    copyHandlers();
+  });
+
+  ideaBtn?.addEventListener("click", () => {
+    render("Ideas", ideas);
+    copyHandlers();
+  });
+
+  if (output) {
+    output.innerHTML = `
+      <div class="card">
+        <div class="page-title">AI Studio</div>
+        <div class="small-note">Type a prompt, then generate captions, hashtags, or content ideas.</div>
+      </div>
+    `;
   }
-}
-
-// ----------------------
-// Optional: Function to save AI-generated post
-// ----------------------
-async function saveAIPost(username, caption, media_url, type) {
-  const { data, error } = await supabase
-    .from("posts")
-    .insert([{ username, caption, media_url, type }]);
-
-  if (error) console.error("Error saving AI post:", error);
-  else console.log("AI post saved:", data);
-         }
- 
+});
