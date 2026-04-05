@@ -1,99 +1,110 @@
-// ==========================
-// ASTRIO APP.JS
-// Handles Supabase, Page Navigation, Realtime Updates
-// ==========================
+// js/app.js
+// Core initialization and Supabase setup
 
-// 1️⃣ Supabase Setup
+// ----------------------
+// Supabase Configuration
+// ----------------------
 const SUPABASE_URL = "https://llooewepqlkcpqzmiuzo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_vYhWHzf0GkDxch6hp9QmAA_kXkJEu6C";
+
+// Initialize Supabase client
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 2️⃣ Page Loader
-const appContainer = document.getElementById("app");
+// ----------------------
+// Global App State
+// ----------------------
+const appState = {
+    currentUser: null,
+    feedPosts: [],
+    activeChatRoom: null,
+    notifications: [],
+};
 
-function loadPage(page) {
-  fetch(`pages/${page}.html`)
-    .then((res) => res.text())
-    .then((html) => {
-      appContainer.innerHTML = html;
-      if (page === "feed") initFeed();
-      if (page === "ai") initAI();
-      if (page === "chat") initChat();
-      if (page === "profile") initProfile();
-      if (page === "notifications") initNotifications();
-    })
-    .catch((err) => {
-      console.error("Error loading page:", err);
-      appContainer.innerHTML = `<p class="neon-text">Page not found!</p>`;
-    });
-}
+// ----------------------
+// Helper Functions
+// ----------------------
 
-// 3️⃣ Auth State
+// Check if user is logged in
 async function checkAuth() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) loadPage("auth");
-  else loadPage("feed");
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session && session.user) {
+        appState.currentUser = session.user;
+        console.log("User logged in:", appState.currentUser.email);
+        return true;
+    }
+    return false;
 }
 
-// 4️⃣ Initialize App
-window.addEventListener("DOMContentLoaded", async () => {
-  await checkAuth();
-});
-
-// 5️⃣ Logout Function
+// Log out
 async function logout() {
-  const { error } = await supabase.auth.signOut();
-  if (!error) {
-    loadPage("auth");
-  }
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error("Logout error:", error.message);
+    else {
+        appState.currentUser = null;
+        window.location.href = "pages/auth.html";
+    }
 }
 
-// 6️⃣ Real-time Feed Listener
-function initFeed() {
-  const feedContainer = document.getElementById("feed-container");
-  if (!feedContainer) return;
+// Fetch feed posts
+async function fetchFeed() {
+    const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .order("timestamp", { ascending: false })
+        .limit(50);
 
-  // Listen for new posts
-  supabase
-    .channel("public:posts")
-    .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, payload => {
-      const post = payload.new;
-      feedContainer.innerHTML = `<div class="post-card neon-glow">
-        <p>${post.user}: ${post.caption}</p>
-      </div>` + feedContainer.innerHTML;
-    })
-    .subscribe();
+    if (error) console.error("Error fetching posts:", error.message);
+    else {
+        appState.feedPosts = data;
+        console.log("Feed posts loaded:", data.length);
+    }
 }
 
-// 7️⃣ AI Page Init
-function initAI() {
-  // Placeholder for AI integration: RunwayML, Stable Diffusion, Tone.js
-  console.log("AI Page Loaded - integrate AI tools here!");
+// Subscribe to real-time updates
+function subscribeRealtime() {
+    // Feed updates
+    supabase
+        .channel("public:posts")
+        .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "posts" },
+            (payload) => {
+                console.log("Realtime post update:", payload);
+                fetchFeed(); // reload feed
+            }
+        )
+        .subscribe();
+
+    // Notifications updates
+    supabase
+        .channel("public:notifications")
+        .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "notifications" },
+            (payload) => {
+                console.log("Realtime notification:", payload);
+                appState.notifications.push(payload.new);
+            }
+        )
+        .subscribe();
 }
 
-// 8️⃣ Chat Init
-function initChat() {
-  const chatContainer = document.getElementById("chat-container");
-  if (!chatContainer) return;
+// Initialize App
+async function initApp() {
+    const loggedIn = await checkAuth();
+    if (!loggedIn) {
+        window.location.href = "pages/auth.html";
+        return;
+    }
 
-  supabase
-    .channel("public:messages")
-    .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, payload => {
-      const msg = payload.new;
-      const msgEl = document.createElement("div");
-      msgEl.className = "post-card neon-glow";
-      msgEl.textContent = `${msg.user}: ${msg.message}`;
-      chatContainer.prepend(msgEl);
-    })
-    .subscribe();
+    // Load feed
+    await fetchFeed();
+
+    // Subscribe to real-time changes
+    subscribeRealtime();
 }
 
-// 9️⃣ Profile Init
-function initProfile() {
-  console.log("Profile Page Loaded - load user info, stats, posts");
-}
-
-// 🔔 Notifications Init
-function initNotifications() {
-  console.log("Notifications Page Loaded - listen to realtime alerts");
-          }
+// Call initApp on page load
+document.addEventListener("DOMContentLoaded", () => {
+    initApp();
+});
