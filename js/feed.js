@@ -136,3 +136,13 @@ Astrio.registerPage("feed", async () => {
 
   await loadPosts();
 });
+const feed = document.getElementById("feed");
+
+if (feed) {
+    feed.innerHTML = `
+        <div class="post-card fade-in">
+            <h3>Welcome to Astrio 🔥</h3>
+            <p>Your app is working.</p>
+        </div>
+    `;
+}
