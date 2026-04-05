@@ -1,52 +1,73 @@
-# Astrio PWA Platform Visual Interface Map
+# Astrio Interface Map
 
-## Overview
-This document provides a comprehensive visual interface map for the Astrio Progressive Web App (PWA) platform. It includes details on all screens, navigation flows, component hierarchy, glassmorphism design elements, and data flow.
+## Comprehensive Overview
 
-## Screens Overview
-1. **Home Screen**
-   - Features: **Header**, **Footer**, **Main Content Area**
-   - Navigation: Links to **Products**, **About Us**, **Contact**
-   
-2. **Product Listing Screen**
-   - Features: **Product Cards**, **Filters**, **Sorting Options**
-   - Navigation: Links to **Product Details**
+### Screens:
+1. **Home Feed**
+   - Displays latest posts and updates
+2. **Profile**
+   - User details and activities
+3. **AI Tools**
+   - Various machine learning utilities
+4. **Chat & Calls**
+   - Messaging and voice/video call features
+5. **Market**
+   - Platform for trading and exchanges
+6. **Create/Media Editor**
+   - Tools for content creation
+7. **Settings**
+   - User preferences and configurations
 
-3. **Product Detail Screen**
-   - Features: **Product Images**, **Description**, **Add to Cart** button
-   - Navigation: Links to **Checkout**
+### Navigation Flows:
+- **Top Navigation (Tab Bar)**:
+  - **Discover**: Explore content
+  - **AI**: Access AI features
+  - **Notifications**: Alerts for updates
 
-4. **Checkout Screen**
-   - Features: **Shipping Information**, **Payment Method**, **Order Summary**
-   - Navigation: Links to **Order Confirmation**
+- **Bottom Navigation (Tab Bar)**:
+  - **Home**: Return to home feed
+  - **Market**: Access market trading
+  - **Create**: Start new posts or projects
+  - **Chat**: Messaging interface
+  - **Profile**: View user profile
 
-5. **User Profile Screen**
-   - Features: **Account Information**, **Order History**, **Settings**
-   - Navigation: Links to **Edit Profile**
+### Component Hierarchy:
+- Home Feed
+  - Post Listings
+  - Post Interaction (likes, comments)
+- Profile
+  - User Info
+  - Activity Feed
+- AI Tools
+  - Tool Selection
+  - Results Display
+- Chat & Calls
+  - Conversation Threads
+  - Call Options
+- Market
+  - Trading Cards
+  - User Transactions
+- Create/Media Editor
+  - Media Upload
+  - Editing Tools
+- Settings
+  - Configuration Options
 
-## Navigation Flows
-- **From Home**:
-  - Home → Products → Product Detail → Checkout → Order Confirmation
-  - Home → About Us
-  - Home → Contact
+### Glassmorphism Design Elements:
+- Background blurs for cards
+- Semi-transparent overlays for menus
+- Soft shadows to create depth
 
-## Component Hierarchy
-- **App Container**
-  - **Header**
-  - **Footer**
-  - **Main Content**
-    - **Screen Components** (as outlined above)
+### Real-time Supabase Data Flow:
+- Instant updates on user activity
+- Synchronization of chat messages
+- Live trading updates in market
 
-## Glassmorphism Design Elements
-- **Background Blurs** in key areas to create depth
-- Use of **semi-transparent backgrounds** in components like cards and modals
-- Soft shadows to enhance element separation
-
-## Data Flow
-- Data is fetched from the **API** for:
-  - Product information (JSON from Products API)
-  - User authentication and profile data (API endpoints)
-- State management via **Redux** or **Context API** to handle global state
-
-## Conclusion
-This interface map serves as a blueprint for the development and design of the Astrio PWA, ensuring a cohesive user experience across all components.
+### User Journey Diagrams:
+- Home Feed Interaction Paths
+- Profile Engagement Steps
+- AI Tools Utilization Journey
+- Chat Communication Loop
+- Market Trading Flow
+- Content Creation Process
+- Settings Adjustment Steps
