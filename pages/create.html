@@ -1,1 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astrio – Create</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="../js/mediaTools.js" defer></script>
+</head>
+<body class="bg-dark text-white font-sans">
+  <header class="top-nav glass">
+    <h1>Create Content</h1>
+  </header>
 
+  <main class="create-container">
+    <input type="file" id="media-upload" accept="video/*,audio/*">
+    <button id="media-upload-btn" class="btn-primary">Upload</button>
+
+    <video id="media-preview" controls style="display:none;"></video>
+    <button id="apply-filter-btn" class="btn-secondary">Apply Neon Filter</button>
+    <button id="generate-music-btn" class="btn-secondary">Generate AI Music</button>
+  </main>
+</body>
+</html>
