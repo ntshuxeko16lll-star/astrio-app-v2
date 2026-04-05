@@ -1,86 +1,128 @@
-// js/profile.js
-// Handles user profile data, updates, and display
+window.Astrio = window.Astrio || {};
 
-// Initialize Supabase (reuse credentials)
-const supabaseUrl = "https://llooewepqlkcpqzmiuzo.supabase.co";
-const supabaseKey = "sb_publishable_vYhWHzf0GkDxch6hp9QmAA_kXkJEu6C";
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+Astrio.registerPage("profile", async () => {
+  const avatar = document.getElementById("profile-avatar");
+  const nameInput = document.getElementById("profile-username");
+  const bioInput = document.getElementById("profile-bio");
+  const avatarInput = document.getElementById("profile-avatar-input");
+  const emailLine = document.getElementById("profile-email");
+  const postsCount = document.getElementById("profile-posts");
+  const followersCount = document.getElementById("profile-followers");
+  const followingCount = document.getElementById("profile-following");
+  const saveBtn = document.getElementById("profile-save-btn");
+  const status = document.getElementById("profile-status");
 
-// Elements
-const profileAvatar = document.getElementById("profile-avatar");
-const profileName = document.getElementById("profile-name");
-const profileBio = document.getElementById("profile-bio");
-const profileSaveBtn = document.getElementById("profile-save-btn");
-const avatarInput = document.getElementById("avatar-input");
+  const showStatus = (text, good = true) => {
+    if (!status) return;
+    status.textContent = text;
+    status.style.color = good ? "var(--cyan)" : "#ff8e8e";
+  };
 
-let currentUserId = "123"; // Replace with logged-in user ID
+  const loadProfile = async () => {
+    const user = Astrio.state.user;
+    if (!user) return;
 
-// ----------------------
-// Fetch profile data
-// ----------------------
-async function loadProfile(userId) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .single();
+    if (emailLine) emailLine.textContent = user.email;
 
-  if (error) console.error("Error loading profile:", error);
-  else {
-    profileName.value = data.username || "";
-    profileBio.value = data.bio || "";
-    if (data.avatar_url) profileAvatar.src = data.avatar_url;
-  }
-}
+    const { data: profile } = await Astrio.sb
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
 
-// ----------------------
-// Update profile data
-// ----------------------
-async function saveProfile() {
-  let avatarUrl = profileAvatar.src;
-
-  // Upload avatar if a new file is selected
-  if (avatarInput.files && avatarInput.files[0]) {
-    const file = avatarInput.files[0];
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(`avatars/${currentUserId}/${file.name}`, file, {
-        cacheControl: "3600",
-        upsert: true,
+    if (!profile) {
+      await Astrio.sb.from("profiles").upsert({
+        id: user.id,
+        username: Astrio.userName(),
+        bio: "",
+        avatar_url: "",
+        updated_at: new Date().toISOString()
       });
-
-    if (uploadError) console.error("Avatar upload error:", uploadError);
-    else {
-      const { publicUrl } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(uploadData.path);
-      avatarUrl = publicUrl;
     }
-  }
 
-  // Update profile
-  const { data, error } = await supabase.from("profiles").upsert([
-    {
-      id: currentUserId,
-      username: profileName.value,
-      bio: profileBio.value,
+    const { data: fresh } = await Astrio.sb
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const current = fresh || profile;
+
+    if (current) {
+      Astrio.state.profile = current;
+      if (nameInput) nameInput.value = current.username || Astrio.userName();
+      if (bioInput) bioInput.value = current.bio || "";
+      if (avatar && current.avatar_url) avatar.src = current.avatar_url;
+    }
+
+    const { count: postCount } = await Astrio.sb
+      .from("posts")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    const { count: followerCount } = await Astrio.sb
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("following_id", user.id);
+
+    const { count: followingCountValue } = await Astrio.sb
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", user.id);
+
+    if (postsCount) postsCount.textContent = String(postCount || 0);
+    if (followersCount) followersCount.textContent = String(followerCount || 0);
+    if (followingCount) followingCount.textContent = String(followingCountValue || 0);
+  };
+
+  saveBtn?.addEventListener("click", async () => {
+    const user = Astrio.state.user;
+    if (!user) return;
+
+    let avatarUrl = Astrio.avatarUrl();
+
+    if (avatarInput?.value?.trim()) {
+      avatarUrl = avatarInput.value.trim();
+    }
+
+    const username = nameInput?.value?.trim() || Astrio.userName();
+    const bio = bioInput?.value?.trim() || "";
+
+    const { error: authError } = await Astrio.sb.auth.updateUser({
+      data: {
+        username,
+        avatar_url: avatarUrl
+      }
+    });
+
+    if (authError) {
+      showStatus(authError.message, false);
+      return;
+    }
+
+    const { error } = await Astrio.sb.from("profiles").upsert({
+      id: user.id,
+      username,
+      bio,
       avatar_url: avatarUrl,
-      updated_at: new Date(),
-    },
-  ]);
+      updated_at: new Date().toISOString()
+    });
 
-  if (error) console.error("Error saving profile:", error);
-  else alert("Profile updated successfully!");
-}
+    if (error) {
+      showStatus(error.message, false);
+      return;
+    }
 
-// ----------------------
-// Event listeners
-// ----------------------
-if (profileSaveBtn) {
-  profileSaveBtn.addEventListener("click", saveProfile);
-}
+    if (avatar && avatarUrl) avatar.src = avatarUrl;
+    Astrio.state.profile = {
+      ...(Astrio.state.profile || {}),
+      username,
+      bio,
+      avatar_url: avatarUrl
+    };
 
-// ----------------------
-// Initial load
-// ----------------------
-loadProfile(currentUserId);
+    showStatus("Saved");
+  });
+
+  await loadProfile();
+});
