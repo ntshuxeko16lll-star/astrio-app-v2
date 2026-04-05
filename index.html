@@ -2,53 +2,92 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Astrio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astrio App</title>
 
-  <!-- PWA -->
+  <!-- PWA manifest -->
   <link rel="manifest" href="manifest.json">
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Favicon / logo -->
+  <link rel="icon" href="assets/logo.png" type="image/png">
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Emojis -->
-  <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js"></script>
-
-  <!-- Animations -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-
-  <!-- CSS -->
+  <!-- Tailwind CSS or your style -->
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
+
+  <!-- JS -->
+  <script src="js/app.js" defer></script>
+  <script src="js/auth.js" defer></script>
+  <script src="js/feed.js" defer></script>
+  <script src="js/ai.js" defer></script>
+  <script src="js/notifications.js" defer></script>
+  <script src="js/chat.js" defer></script>
+  <script src="js/profile.js" defer></script>
+  <script src="js/mediaTools.js" defer></script>
+
+  <!-- Neon/Glowing font or Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Theme Colors -->
+  <meta name="theme-color" content="#0f0f0f">
 </head>
+<body class="bg-[#050505] text-white font-orbitron flex flex-col min-h-screen">
 
-<body class="app-body">
+  <!-- Top Navigation -->
+  <header class="flex items-center justify-between p-4 bg-black/50 backdrop-blur-md fixed w-full z-20">
+    <div class="flex space-x-4">
+      <span id="time" class="text-sm text-cyan-400">19:28</span>
+      <span class="text-sm text-purple-400">VoLTE</span>
+    </div>
+    <div class="flex space-x-4">
+      <span class="battery text-green-400">66%</span>
+    </div>
+    <nav class="flex space-x-6">
+      <button id="discover-tab" class="text-cyan-400 font-bold">Discover</button>
+      <button id="ai-tab" class="text-purple-400 font-bold">AI</button>
+      <button id="notifications-tab" class="text-pink-400 font-bold">🔔</button>
+    </nav>
+  </header>
 
-<!-- 🔝 TOP NAV -->
-<div class="top-nav">
-  <button onclick="loadPage('feed')">Discover</button>
-  <button onclick="loadPage('ai')">AI</button>
-  <button onclick="loadPage('notifications')">🔔</button>
-</div>
+  <!-- Main Content / Feed -->
+  <main class="flex-1 mt-20 mb-20 overflow-y-auto">
+    <section id="feed" class="flex flex-col items-center space-y-4 p-4">
+      <!-- Posts will be dynamically injected here via feed.js -->
+      <div class="post-card bg-[#111111] rounded-xl w-full max-w-md p-4 shadow-lg glow">
+        <h2 class="text-lg text-cyan-300 font-bold">Welcome to Astrio</h2>
+        <p class="text-sm text-gray-400">Your AI + Reel creative universe</p>
+      </div>
+    </section>
+  </main>
 
-<!-- 📱 MAIN CONTENT -->
-<div id="app" class="app-container"></div>
+  <!-- Bottom Navigation -->
+  <nav class="flex justify-around items-center fixed bottom-0 w-full bg-black/50 backdrop-blur-md p-2 z-20">
+    <button class="text-cyan-400 flex flex-col items-center">
+      <img src="assets/icons/home.svg" class="w-6 h-6 mb-1" alt="Home">
+      <span class="text-xs">Home</span>
+    </button>
 
-<!-- 🔻 BOTTOM NAV -->
-<div class="bottom-nav">
-  <button onclick="loadPage('feed')">🏠</button>
-  <button onclick="loadPage('market')">🛒</button>
-  <button onclick="loadPage('create')" class="create-btn">＋</button>
-  <button onclick="loadPage('chat')">💬</button>
-  <button onclick="loadPage('profile')">👤</button>
-</div>
+    <button class="text-purple-400 flex flex-col items-center">
+      <img src="assets/icons/market.svg" class="w-6 h-6 mb-1" alt="Market">
+      <span class="text-xs">Market</span>
+    </button>
 
-<!-- 🚀 APP SCRIPT -->
-<script src="js/app.js"></script>
+    <!-- Central Create Button -->
+    <button id="create-btn" class="bg-gradient-to-r from-cyan-400 to-purple-400 w-16 h-16 rounded-full flex items-center justify-center shadow-lg text-black text-3xl font-bold -mt-6">
+      +
+    </button>
+
+    <button class="text-pink-400 flex flex-col items-center">
+      <img src="assets/icons/chat.svg" class="w-6 h-6 mb-1" alt="Chat">
+      <span class="text-xs">Chat</span>
+    </button>
+
+    <button class="text-green-400 flex flex-col items-center">
+      <img src="assets/icons/profile.svg" class="w-6 h-6 mb-1" alt="Profile">
+      <span class="text-xs">Profile</span>
+    </button>
+  </nav>
 
 </body>
   </html>
