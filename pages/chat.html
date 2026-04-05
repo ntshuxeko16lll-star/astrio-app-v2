@@ -1,1 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astrio – Chat</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="../js/chat.js" defer></script>
+</head>
+<body class="bg-dark text-white font-sans">
+  <header class="top-nav glass">
+    <h1>Chats</h1>
+  </header>
 
+  <main class="chat-container">
+    <ul id="chat-list" class="chat-list">
+      <!-- 1:1 and group chat messages will appear here -->
+    </ul>
+
+    <div class="chat-input">
+      <input type="text" id="chat-message" placeholder="Type a message...">
+      <button id="send-message-btn" class="btn-primary">Send</button>
+    </div>
+  </main>
+</body>
+</html>
