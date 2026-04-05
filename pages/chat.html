@@ -1,28 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Astrio – Chat</title>
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/components.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="../js/chat.js" defer></script>
-</head>
-<body class="bg-dark text-white font-sans">
-  <header class="top-nav glass">
-    <h1>Chats</h1>
-  </header>
+<section class="page-screen">
+  <div class="page-head">
+    <h1 class="page-title">Chat</h1>
+    <p class="page-subtitle">Rooms, messages, and realtime updates</p>
+  </div>
 
-  <main class="chat-container">
-    <ul id="chat-list" class="chat-list">
-      <!-- 1:1 and group chat messages will appear here -->
-    </ul>
-
-    <div class="chat-input">
-      <input type="text" id="chat-message" placeholder="Type a message...">
-      <button id="send-message-btn" class="btn-primary">Send</button>
+  <div class="chat-shell">
+    <div class="card column">
+      <div class="row">
+        <input id="chat-room-name" class="input" type="text" placeholder="New room name" />
+        <button id="chat-new-room" class="btn btn-ghost" type="button">Create</button>
+      </div>
+      <div id="chat-room-list" class="room-list"></div>
     </div>
-  </main>
-</body>
-</html>
+
+    <div id="chat-messages" class="message-list"></div>
+
+    <div class="card column">
+      <input id="chat-input" class="input" type="text" placeholder="Type a message..." />
+      <button id="chat-send-btn" class="btn btn-primary" type="button">Send</button>
+    </div>
+  </div>
+        </section>
