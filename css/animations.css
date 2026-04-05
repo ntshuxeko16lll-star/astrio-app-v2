@@ -1,1 +1,29 @@
+/* ==========================
+   BUTTON & ELEMENT ANIMATIONS
+========================== */
+button, .post-card, .create-btn {
+  transition: all 0.25s ease-in-out;
+}
 
+/* FEED SNAP */
+#app.app-container {
+  scroll-snap-type: y mandatory;
+}
+
+.post-card {
+  scroll-snap-align: start;
+}
+
+/* GLOW ANIMATION */
+@keyframes neonGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px #00f3ff, 0 0 20px #ff00ff;
+  }
+  50% {
+    box-shadow: 0 0 20px #00f3ff, 0 0 40px #ff00ff;
+  }
+}
+
+.neon-glow {
+  animation: neonGlow 1.5s infinite alternate;
+  }
