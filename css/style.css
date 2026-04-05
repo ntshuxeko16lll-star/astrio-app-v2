@@ -1,41 +1,70 @@
-/* ==========================
-   MAIN BODY & THEME
-========================== */
-body.app-body {
-  margin: 0;
-  padding: 0;
-  background-color: #050505; /* Deep obsidian */
-  color: #fff;
-  font-family: 'Segoe UI', sans-serif;
-  overflow-x: hidden;
+/* style.css - Global neon-dark theme */
+:root {
+    --bg-color: #0f0f0f;
+    --primary-color: #00f3ff;
+    --accent-color: #ff00ff;
+    --text-color: #ffffff;
+    --secondary-text: #aaaaaa;
+    --border-radius: 12px;
 }
 
-/* App container */
-#app.app-container {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-color);
 }
 
-/* Neon Text */
-.neon-text {
-  color: #00f3ff;
-  text-shadow:
-    0 0 5px #00f3ff,
-    0 0 10px #ff00ff,
-    0 0 20px #ff00ff;
+body {
+    background-color: var(--bg-color);
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
-/* Glow Buttons Default */
+a {
+    text-decoration: none;
+    color: var(--primary-color);
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
 button {
-  border: none;
-  background: transparent;
-  color: #00f3ff;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    background: var(--primary-color);
+    color: var(--bg-color);
+    font-weight: bold;
+    padding: 0.6rem 1rem;
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
 }
 
 button:hover {
-  color: #ff00ff;
-  text-shadow: 0 0 10px #ff00ff, 0 0 20px #00f3ff;
-  }
+    filter: brightness(1.2);
+}
+
+input, textarea {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    padding: 0.5rem;
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1a1a;
+   }
