@@ -194,3 +194,16 @@ console.log("Supabase connected:", supabase);
 
   document.addEventListener("DOMContentLoaded", Astrio.boot);
 })();
+document.querySelectorAll(".nav-btn").forEach((btn, index) => {
+    btn.addEventListener("click", () => {
+        const pages = [
+            "pages/feed.html",
+            "pages/market.html",
+            "pages/create.html",
+            "pages/chat.html",
+            "pages/profile.html"
+        ];
+
+        window.location.href = pages[index];
+    });
+});
