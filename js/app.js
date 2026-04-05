@@ -4,8 +4,10 @@ window.Astrio = window.Astrio || {};
   const SUPABASE_URL = "https://llooewepqlkcpqzmiuzo.supabase.co";
   const SUPABASE_KEY = "sb_publishable_vYhWHzf0GkDxch6hp9QmAA_kXkJEu6C";
 
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  
+console.log("Supabase connected:", supabase);
+  
   Astrio.sb = sb;
   Astrio.state = {
     user: null,
