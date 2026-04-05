@@ -1,4 +1,22 @@
-window.Astrio = window.Astrio || {};
+document.addEventListener("DOMContentLoaded", () => {
+
+    const navButtons = document.querySelectorAll(".nav-btn");
+
+    const pages = [
+        "pages/feed.html",
+        "pages/market.html",
+        "pages/create.html",
+        "pages/chat.html",
+        "pages/profile.html"
+    ];
+
+    navButtons.forEach((btn, index) => {
+        btn.addEventListener("click", () => {
+            window.location.href = pages[index];
+        });
+    });
+
+});window.Astrio = window.Astrio || {};
 
 (() => {
   const SUPABASE_URL = "https://llooewepqlkcpqzmiuzo.supabase.co";
