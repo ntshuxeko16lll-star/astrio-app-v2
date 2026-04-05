@@ -1,27 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Astrio – AI Studio</title>
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/components.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="../js/ai.js" defer></script>
-</head>
-<body class="bg-dark text-white font-sans">
-  <header class="top-nav glass">
-    <h1>AI Studio</h1>
-  </header>
+<section class="page-screen">
+  <div class="page-head">
+    <h1 class="page-title">AI Studio</h1>
+    <p class="page-subtitle">Captions, hashtags, and ideas</p>
+  </div>
 
-  <main class="ai-container">
-    <section class="ai-tools">
-      <h2>AI Content Generator</h2>
-      <textarea id="ai-prompt" placeholder="Enter text prompt..."></textarea>
-      <button id="generate-video-btn" class="btn-primary">Generate Video</button>
-      <button id="generate-music-btn" class="btn-primary">Generate Music</button>
-      <div id="ai-output" class="ai-output"></div>
-    </section>
-  </main>
-</body>
-</html>
+  <div class="card column">
+    <textarea id="ai-prompt" class="textarea" placeholder="Write a prompt for Astrio AI..."></textarea>
+
+    <div class="row" style="flex-wrap:wrap;">
+      <button id="ai-caption-btn" class="btn btn-primary" type="button">Generate captions</button>
+      <button id="ai-hashtag-btn" class="btn" type="button">Generate hashtags</button>
+      <button id="ai-idea-btn" class="btn btn-ghost" type="button">Generate ideas</button>
+    </div>
+  </div>
+
+  <div id="ai-output" class="column"></div>
+</section>
