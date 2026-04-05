@@ -1,102 +1,96 @@
-// js/auth.js
-// Handles user authentication (Sign up, Log in, Logout)
+window.Astrio = window.Astrio || {};
 
-// Get references to auth forms (if they exist)
-const signupForm = document.getElementById("signup-form");
-const loginForm = document.getElementById("login-form");
-const logoutBtn = document.getElementById("logout-btn");
+Astrio.registerPage("auth", async () => {
+  const loginPanel = document.getElementById("login-panel");
+  const signupPanel = document.getElementById("signup-panel");
+  const goSignup = document.getElementById("go-signup");
+  const goLogin = document.getElementById("go-login");
+  const loginForm = document.getElementById("login-form");
+  const signupForm = document.getElementById("signup-form");
+  const message = document.getElementById("auth-message");
 
-// ----------------------
-// Sign Up Function
-// ----------------------
-async function signUp(email, password) {
-    try {
-        const { data, error } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-        });
+  const showMessage = (text, good = true) => {
+    if (!message) return;
+    message.textContent = text;
+    message.style.color = good ? "var(--cyan)" : "#ff8e8e";
+  };
 
-        if (error) {
-            console.error("Sign-up error:", error.message);
-            alert("Sign-up failed: " + error.message);
-            return;
-        }
+  const showLogin = () => {
+    loginPanel?.classList.remove("hidden");
+    signupPanel?.classList.add("hidden");
+    showMessage("");
+  };
 
-        alert(
-            "Sign-up successful! Please check your email for confirmation."
-        );
-        console.log("Sign-up data:", data);
-    } catch (err) {
-        console.error("Unexpected error during sign-up:", err);
-    }
-}
+  const showSignup = () => {
+    signupPanel?.classList.remove("hidden");
+    loginPanel?.classList.add("hidden");
+    showMessage("");
+  };
 
-// ----------------------
-// Log In Function
-// ----------------------
-async function logIn(email, password) {
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-        });
+  goSignup?.addEventListener("click", showSignup);
+  goLogin?.addEventListener("click", showLogin);
 
-        if (error) {
-            console.error("Log-in error:", error.message);
-            alert("Log-in failed: " + error.message);
-            return;
-        }
+  loginForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-        console.log("Logged in:", data.user.email);
-        appState.currentUser = data.user;
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
 
-        // Redirect to feed page
-        window.location.href = "../index.html";
-    } catch (err) {
-        console.error("Unexpected error during login:", err);
-    }
-}
-
-// ----------------------
-// Log Out Function
-// ----------------------
-async function logOutUser() {
-    try {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-            console.error("Logout error:", error.message);
-            return;
-        }
-        appState.currentUser = null;
-        window.location.href = "auth.html";
-    } catch (err) {
-        console.error("Unexpected logout error:", err);
-    }
-}
-
-// ----------------------
-// Form Event Listeners
-// ----------------------
-if (signupForm) {
-    signupForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const email = signupForm["signup-email"].value;
-        const password = signupForm["signup-password"].value;
-        signUp(email, password);
+    const { data, error } = await Astrio.sb.auth.signInWithPassword({
+      email,
+      password
     });
-}
 
-if (loginForm) {
-    loginForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const email = loginForm["login-email"].value;
-        const password = loginForm["login-password"].value;
-        logIn(email, password);
-    });
-}
+    if (error) {
+      showMessage(error.message, false);
+      return;
+    }
 
-if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-        logOutUser();
+    if (data?.user) {
+      await Astrio.loadUser();
+      Astrio.go("feed");
+    }
+  });
+
+  signupForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const username = document.getElementById("signup-username").value.trim();
+    const email = document.getElementById("signup-email").value.trim();
+    const password = document.getElementById("signup-password").value;
+
+    const { data, error } = await Astrio.sb.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username }
+      }
     });
-                  }
+
+    if (error) {
+      showMessage(error.message, false);
+      return;
+    }
+
+    if (data?.user) {
+      await Astrio.sb.from("profiles").upsert({
+        id: data.user.id,
+        username,
+        bio: "",
+        avatar_url: "",
+        updated_at: new Date().toISOString()
+      });
+    }
+
+    if (data?.session) {
+      await Astrio.loadUser();
+      Astrio.go("feed");
+      return;
+    }
+
+    showMessage("Account created. Check email verification if it is enabled.", true);
+    showLogin();
+  });
+
+  showLogin();
+});
