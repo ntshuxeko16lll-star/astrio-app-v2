@@ -1,59 +1,102 @@
-/* ==========================
-   ASTRIO AUTH.JS
-   Handles Sign-up / Log-in / Redirect
-========================== */
+// js/auth.js
+// Handles user authentication (Sign up, Log in, Logout)
 
-// Grab form elements
-const loginForm = document.getElementById("login-form");
+// Get references to auth forms (if they exist)
 const signupForm = document.getElementById("signup-form");
+const loginForm = document.getElementById("login-form");
+const logoutBtn = document.getElementById("logout-btn");
 
-// 1️⃣ LOGIN FUNCTION
-async function loginUser(event) {
-  event.preventDefault();
-  const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-password").value;
+// ----------------------
+// Sign Up Function
+// ----------------------
+async function signUp(email, password) {
+    try {
+        const { data, error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+        });
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+        if (error) {
+            console.error("Sign-up error:", error.message);
+            alert("Sign-up failed: " + error.message);
+            return;
+        }
 
-  if (error) {
-    alert("Login failed: " + error.message);
-    console.error(error);
-  } else {
-    console.log("Logged in:", data);
-    loadPage("feed");
-  }
-}
-
-// 2️⃣ SIGNUP FUNCTION
-async function signupUser(event) {
-  event.preventDefault();
-  const email = document.getElementById("signup-email").value;
-  const password = document.getElementById("signup-password").value;
-  const username = document.getElementById("signup-username").value;
-
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        username: username
-      }
+        alert(
+            "Sign-up successful! Please check your email for confirmation."
+        );
+        console.log("Sign-up data:", data);
+    } catch (err) {
+        console.error("Unexpected error during sign-up:", err);
     }
-  });
-
-  if (error) {
-    alert("Sign-up failed: " + error.message);
-    console.error(error);
-  } else {
-    alert("Sign-up successful! Please verify your email.");
-    console.log("Signed up:", data);
-    loadPage("auth"); // Redirect to login
-  }
 }
 
-// 3️⃣ Attach Event Listeners if forms exist
-if (loginForm) loginForm.addEventListener("submit", loginUser);
-if (signupForm) signupForm.addEventListener("submit", signupUser);
+// ----------------------
+// Log In Function
+// ----------------------
+async function logIn(email, password) {
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+
+        if (error) {
+            console.error("Log-in error:", error.message);
+            alert("Log-in failed: " + error.message);
+            return;
+        }
+
+        console.log("Logged in:", data.user.email);
+        appState.currentUser = data.user;
+
+        // Redirect to feed page
+        window.location.href = "../index.html";
+    } catch (err) {
+        console.error("Unexpected error during login:", err);
+    }
+}
+
+// ----------------------
+// Log Out Function
+// ----------------------
+async function logOutUser() {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error("Logout error:", error.message);
+            return;
+        }
+        appState.currentUser = null;
+        window.location.href = "auth.html";
+    } catch (err) {
+        console.error("Unexpected logout error:", err);
+    }
+}
+
+// ----------------------
+// Form Event Listeners
+// ----------------------
+if (signupForm) {
+    signupForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const email = signupForm["signup-email"].value;
+        const password = signupForm["signup-password"].value;
+        signUp(email, password);
+    });
+}
+
+if (loginForm) {
+    loginForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const email = loginForm["login-email"].value;
+        const password = loginForm["login-password"].value;
+        logIn(email, password);
+    });
+}
+
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+        logOutUser();
+    });
+                  }
