@@ -1,1 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astrio – Feed</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="../js/feed.js" defer></script>
+  <script src="../js/ai.js" defer></script>
+  <script src="../js/notifications.js" defer></script>
+</head>
+<body class="bg-dark text-white font-sans">
+  <!-- Top Navigation -->
+  <header class="top-nav glass">
+    <button id="discover-btn">Discover</button>
+    <button id="ai-btn">AI</button>
+    <button id="notifications-btn">Notifications</button>
+  </header>
 
+  <!-- Infinite Feed -->
+  <main id="feed-container" class="feed-container">
+    <!-- Posts loaded dynamically from Supabase -->
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav glass">
+    <button id="home-btn">Home</button>
+    <button id="market-btn">Market</button>
+    <button id="create-btn" class="btn-create">Create</button>
+    <button id="chat-btn">Chat</button>
+    <button id="profile-btn">Profile</button>
+  </nav>
+</body>
+      </html>
