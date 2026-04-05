@@ -1,74 +1,86 @@
-/* ==========================
-   ASTRIO PROFILE.JS
-   Handles user profile, posts, followers
-========================== */
+// js/profile.js
+// Handles user profile data, updates, and display
 
-const profileName = document.getElementById("profile-name");
-const profileEmail = document.getElementById("profile-email");
+// Initialize Supabase (reuse credentials)
+const supabaseUrl = "https://llooewepqlkcpqzmiuzo.supabase.co";
+const supabaseKey = "sb_publishable_vYhWHzf0GkDxch6hp9QmAA_kXkJEu6C";
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+// Elements
 const profileAvatar = document.getElementById("profile-avatar");
-const profileStats = document.getElementById("profile-stats");
-const editProfileBtn = document.getElementById("edit-profile-btn");
+const profileName = document.getElementById("profile-name");
+const profileBio = document.getElementById("profile-bio");
+const profileSaveBtn = document.getElementById("profile-save-btn");
+const avatarInput = document.getElementById("avatar-input");
 
-// 1️⃣ Load user profile
-async function loadProfile() {
-  const user = supabase.auth.user();
-  if (!user) return;
+let currentUserId = "123"; // Replace with logged-in user ID
 
-  profileName.textContent = user.user_metadata?.full_name || user.email.split("@")[0];
-  profileEmail.textContent = user.email;
-  profileAvatar.src = user.user_metadata?.avatar_url || "assets/icons/default-avatar.png";
-
-  // Load stats
-  const { data: posts, error: postError } = await supabase
-    .from("posts")
+// ----------------------
+// Fetch profile data
+// ----------------------
+async function loadProfile(userId) {
+  const { data, error } = await supabase
+    .from("profiles")
     .select("*")
-    .eq("user_id", user.id);
+    .eq("id", userId)
+    .single();
 
-  const { data: followers, error: followersError } = await supabase
-    .from("followers")
-    .select("*")
-    .eq("followed_id", user.id);
-
-  const { data: following, error: followingError } = await supabase
-    .from("followers")
-    .select("*")
-    .eq("follower_id", user.id);
-
-  if (postError || followersError || followingError) console.error("Error loading stats", postError, followersError, followingError);
-
-  profileStats.innerHTML = `
-    <div class="stat-item"><strong>${posts?.length || 0}</strong><span>Posts</span></div>
-    <div class="stat-item"><strong>${followers?.length || 0}</strong><span>Followers</span></div>
-    <div class="stat-item"><strong>${following?.length || 0}</strong><span>Following</span></div>
-  `;
+  if (error) console.error("Error loading profile:", error);
+  else {
+    profileName.value = data.username || "";
+    profileBio.value = data.bio || "";
+    if (data.avatar_url) profileAvatar.src = data.avatar_url;
+  }
 }
 
-// 2️⃣ Edit profile
-async function editProfile({ name, avatarUrl }) {
-  const user = supabase.auth.user();
-  if (!user) return;
+// ----------------------
+// Update profile data
+// ----------------------
+async function saveProfile() {
+  let avatarUrl = profileAvatar.src;
 
-  const updates = {
-    full_name: name,
-    avatar_url: avatarUrl,
-    updated_at: new Date()
-  };
+  // Upload avatar if a new file is selected
+  if (avatarInput.files && avatarInput.files[0]) {
+    const file = avatarInput.files[0];
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(`avatars/${currentUserId}/${file.name}`, file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
 
-  const { error } = await supabase.auth.update({ data: updates });
-  if (error) {
-    console.error("Error updating profile:", error);
-    return;
+    if (uploadError) console.error("Avatar upload error:", uploadError);
+    else {
+      const { publicUrl } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(uploadData.path);
+      avatarUrl = publicUrl;
+    }
   }
 
-  loadProfile(); // Refresh profile UI
+  // Update profile
+  const { data, error } = await supabase.from("profiles").upsert([
+    {
+      id: currentUserId,
+      username: profileName.value,
+      bio: profileBio.value,
+      avatar_url: avatarUrl,
+      updated_at: new Date(),
+    },
+  ]);
+
+  if (error) console.error("Error saving profile:", error);
+  else alert("Profile updated successfully!");
 }
 
-// 3️⃣ Event listener for edit button
-if (editProfileBtn) editProfileBtn.addEventListener("click", () => {
-  const newName = prompt("Enter new display name:", profileName.textContent);
-  const newAvatar = prompt("Enter avatar URL:", profileAvatar.src);
-  if (newName || newAvatar) editProfile({ name: newName, avatarUrl: newAvatar });
-});
+// ----------------------
+// Event listeners
+// ----------------------
+if (profileSaveBtn) {
+  profileSaveBtn.addEventListener("click", saveProfile);
+}
 
-// Initialize on DOM load
-document.addEventListener("DOMContentLoaded", loadProfile);
+// ----------------------
+// Initial load
+// ----------------------
+loadProfile(currentUserId);
