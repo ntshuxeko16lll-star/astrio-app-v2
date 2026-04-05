@@ -1,1 +1,41 @@
+/* ==========================
+   MAIN BODY & THEME
+========================== */
+body.app-body {
+  margin: 0;
+  padding: 0;
+  background-color: #050505; /* Deep obsidian */
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  overflow-x: hidden;
+}
 
+/* App container */
+#app.app-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+/* Neon Text */
+.neon-text {
+  color: #00f3ff;
+  text-shadow:
+    0 0 5px #00f3ff,
+    0 0 10px #ff00ff,
+    0 0 20px #ff00ff;
+}
+
+/* Glow Buttons Default */
+button {
+  border: none;
+  background: transparent;
+  color: #00f3ff;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  color: #ff00ff;
+  text-shadow: 0 0 10px #ff00ff, 0 0 20px #00f3ff;
+  }
