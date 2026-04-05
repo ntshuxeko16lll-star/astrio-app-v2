@@ -1,26 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Astrio – Create</title>
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/components.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="../js/mediaTools.js" defer></script>
-</head>
-<body class="bg-dark text-white font-sans">
-  <header class="top-nav glass">
-    <h1>Create Content</h1>
-  </header>
+<section class="page-screen">
+  <div class="page-head">
+    <h1 class="page-title">Create</h1>
+    <p class="page-subtitle">Upload a reel, image, audio, or text post</p>
+  </div>
 
-  <main class="create-container">
-    <input type="file" id="media-upload" accept="video/*,audio/*">
-    <button id="media-upload-btn" class="btn-primary">Upload</button>
+  <div class="card column">
+    <input id="media-file" class="input" type="file" accept="image/*,video/*,audio/*" />
+    <textarea id="create-caption" class="textarea" placeholder="Write a caption..."></textarea>
 
-    <video id="media-preview" controls style="display:none;"></video>
-    <button id="apply-filter-btn" class="btn-secondary">Apply Neon Filter</button>
-    <button id="generate-music-btn" class="btn-secondary">Generate AI Music</button>
-  </main>
-</body>
-</html>
+    <select id="post-type" class="select">
+      <option value="text">Text</option>
+      <option value="image">Image</option>
+      <option value="video">Video</option>
+      <option value="music">Music</option>
+    </select>
+
+    <div class="row" style="flex-wrap:wrap;">
+      <button id="filter-neon" class="btn btn-ghost" type="button">Neon filter</button>
+      <button id="filter-monochrome" class="btn btn-ghost" type="button">Mono filter</button>
+      <button id="filter-clear" class="btn btn-ghost" type="button">Clear</button>
+    </div>
+
+    <div id="media-preview" class="card-soft"></div>
+
+    <button id="create-post-btn" class="btn btn-primary" type="button">Post</button>
+    <div id="create-status" class="status-line"></div>
+  </div>
+  </section>
